@@ -13,7 +13,7 @@ import ActivityFilters, { ACTIVITY_TYPES } from './ActivityFilters';
 import { buildManagersCache, buildPlayersCache, resolveActivityPlayer, logUnknownActivityType } from './activityUtils';
 import { useActivityPlayerNames } from '../../hooks/useActivityPlayerNames';
 
-const MAX_PAGES = 5;
+const MAX_PAGES = 100;
 const PAGE_DELAY_MS = 300;
 
 const extractActivityPage = extractArray;
