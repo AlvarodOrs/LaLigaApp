@@ -13,6 +13,8 @@ import useTeamMarketIncreases from '../../hooks/useTeamMarketIncreases';
 import { useCurrentWeek } from '../../hooks/useCurrentWeek';
 import StandingsEvolution from './StandingsEvolution';
 import { calculateManagerBalances } from '../../services/balanceService';
+import { buildManagersCache, buildPlayersCache } from '../Activity/activityUtils';
+import { debugAllActivity } from '../../services/activityService';
 
 // teamMoney puede venir como número, texto numérico u objeto
 const parseTeamMoney = (raw) => {
@@ -69,7 +71,7 @@ const Standings = () => {
         const pageActivities = extractArray(response);
 
         // DEBUG
-        console.log('ACTIVITY SAMPLE:', pageActivities.slice(0, 5));
+        // console.log('ACTIVITY SAMPLE:', pageActivities.slice(0, 5));
 
         if (pageActivities.length === 0) break;
 
@@ -412,6 +414,16 @@ const Standings = () => {
     teamMoneyMap,
     user?.userId
   ]);
+
+  // Diagnóstico: volcar la actividad al entrar en Clasificación
+  useEffect(() => {
+    if (isLoadingBalances || balanceActivities.length === 0) return;
+
+    debugAllActivity(balanceActivities, {
+      managersCache: buildManagersCache(standings),
+      playersCache: buildPlayersCache(queryClient.getQueryData(['allPlayers'])),
+    });
+  }, [balanceActivities, isLoadingBalances, standings, queryClient]);
 
   // Guarded UI returns after hooks
   if (isLoading) return <LoadingSpinner fullScreen={true} />;

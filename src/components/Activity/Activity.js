@@ -315,7 +315,6 @@ const Activity = () => {
     },
     [getTeamIdForUser, navigate]
   );
-
   const filteredActivity = useMemo(
     () =>
       activityData
@@ -478,6 +477,32 @@ const Activity = () => {
               onManagerClick={handleManagerClick}
             />
           ))
+          // DEBUG
+          // filteredActivity.map((item, index) => {
+          //   console.log('ACTIVITY DEBUG', {
+          //     activity: item,
+          //     playerName: getPlayerName(item),
+          //     player: resolveActivityPlayer(item, playersCache, resolvedPlayers).player,
+          //     marketValue: resolveActivityPlayer(item, playersCache, resolvedPlayers).player?.marketValue,
+          //     clause: item.playerMasterId ? getPlayerBuyoutClause(item.playerMasterId) : null
+          //   });
+
+          //   return (
+          //     <ActivityRow
+          //       key={`${item.id}-${index}`}
+          //       item={item}
+          //       index={index}
+          //       activityText={getActivityText(item)}
+          //       displayActivityType={getDisplayActivityType(item)}
+          //       userName={getUserName(item)}
+          //       playerName={getPlayerName(item)}
+          //       sellerName={getSellerName(item)}
+          //       playerImage={getPlayerImage(item)}
+          //       onPlayerClick={handlePlayerClick}
+          //       onManagerClick={handleManagerClick}
+          //     />
+          //   );
+          // })
         )}
       </div>
 
