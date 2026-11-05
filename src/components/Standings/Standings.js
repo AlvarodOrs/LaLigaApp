@@ -68,6 +68,9 @@ const Standings = () => {
         const response = await fantasyAPI.getLeagueActivity(leagueId, page);
         const pageActivities = extractArray(response);
 
+        // DEBUG
+        console.log('ACTIVITY SAMPLE:', pageActivities.slice(0, 5));
+
         if (pageActivities.length === 0) break;
 
         // Si la API repite la última página, cortamos el bucle
@@ -329,44 +332,6 @@ const Standings = () => {
   };
 
   const isRealBalance = (item) => getRealBalance(item) !== null;
-
-  // TEMPORAL: verificación del saldo real (teamMoney) frente al estimado.
-  // Cuando confirmes que cuadra con el juego, borra este bloque.
-  useEffect(() => {
-    if (!standingsData.length || !Object.keys(teamMoneyMap).length) return;
-
-    const rows = standingsData.map(item => ({
-      manager: getManagerName(item),
-      teamMoney: teamMoneyMap[String(getTeamId(item))] ?? null,
-      estimado: managerBalances[String(getManagerId(item))]?.balance ?? null,
-    }));
-
-    console.table(rows);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamMoneyMap, standingsData]);
-useEffect(() => {
-  const own = standingsData.find(isCurrentUser);
-  if (!own) return;
-
-  const manager = managerBalances[String(getManagerId(own))];
-  if (!manager?.history?.length) return;
-
-  const last = manager.history.at(-1);
-  console.log('ÚLTIMA OPERACIÓN (según el feed):', last);
-
-  console.table(
-    manager.history.slice(-10).reverse().map(h => ({
-      fecha: h.date,
-      tipo: h.type,
-      descripcion: h.description,
-      importe: h.amount,
-      efectoSaldo: h.signedAmount,
-      saldoTras: h.balanceAfter,
-      contraparte: h.counterpartId,
-      jugador: h.raw?.playerMasterId
-    }))
-  );
-}, [managerBalances, standingsData]);
   // Handle column header click for sorting
   const handleSort = (column) => {
     if (sortBy === column) {
