@@ -28,14 +28,20 @@ export const summarizeActivity = (item, { managersCache, playersCache } = {}) =>
   const { name: playerName } = resolveActivityPlayer(item, playersCache);
 
   return {
-    managerName: getManagerNameById(managersCache, item.user1Id),
+    from: getManagerNameById(managersCache, item.user1Id),
+    description: ACTIVITY_TYPES[type] ?? `Actividad tipo ${type}`,
+    ...( ![4, 7, 9].includes(type) && {
+      to: getManagerNameById(managersCache, item.user2Id) ?? 'market'
+    }),
+    playerName,
+    amount: isExpenseActivity(type) ? -amount : amount, // negativo = gasto
+    date: pick(item, DATE_KEYS),
+    
+    // TO-DO: Implementar playerValueAtTime para calcular el valor del jugador en la fecha de la actividad
+    investedOnClause: (amount - playerValueAtTime(playerName, date)) ?? null, 
+    
     activityId: item.id ?? null,
     activityTypeId: type ?? null,
-    activityDescription: ACTIVITY_TYPES[type] ?? `Actividad tipo ${type}`,
-    playerName,
-    cashMoved: isExpenseActivity(type) ? -amount : amount, // negativo = gasto
-    toManager: getManagerNameById(managersCache, item.user2Id) ?? 'market',
-    dateOfTransaction: pick(item, DATE_KEYS),
   };
 };
 

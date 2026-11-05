@@ -12,13 +12,13 @@ const BONUS_INCLUDES_FIRST_DAY = false;
 const TYPE1_USER1_IS_BUYER = true;
 
 export const ACTIVITY_TYPES = {
-  1: '1. Compra entre mánagers',
-  4: '4. Blindaje de jugador',
-  6: '6. Recompensa de jornada',
-  7: '7. Alineación incorrecta',
-  9: '9. Nuevo miembro de la liga',
-  31: '31. Compra al mercado',
-  33: '33. Venta al mercado'
+  1: 'Compra entre mánagers',
+  4: 'Blindaje de jugador',
+  6: 'Recompensa de jornada',
+  7: 'Alineación incorrecta',
+  9: 'Nuevo miembro de la liga',
+  31: 'Compra al mercado',
+  33: 'Venta al mercado'
 };
 
 const getActivityDate = (activity) =>
