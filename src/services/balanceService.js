@@ -77,7 +77,9 @@ const getFirstActivityDate = (activities) => {
  * Reconstruye el saldo y genera un historial auditable
  * de todas las actividades de cada mánager.
  *
- * Fórmula: 100M - compras + ventas + recompensas + 100.000 × días
+ * Fórmula               =  100M + 100.000 × días - compras + ventas + recompensas
+ * Fórmula en un futuro  =  100M + 100.000 × días - compras + ventas a LaLiga + ventas a managers + recompensas
+ * con ventas a managers = (precio venta - precio mercado en esa fecha) / 2, debido al coste de subida de cláusula.
  *
  * @param leagueStartDate Fecha real de creación de la liga (recomendado).
  *   Si no se pasa, se usa la actividad más antigua descargada.
