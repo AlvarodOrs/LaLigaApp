@@ -26,6 +26,10 @@ export const summarizeActivity = (item, { managersCache, playersCache } = {}) =>
   const type = item.activityTypeId;
   const amount = Number(pick(item, AMOUNT_KEYS)) || 0;
   const { name: playerName } = resolveActivityPlayer(item, playersCache);
+  
+  // Ignorar actividades de blindaje, alineación incorrecta y nuevo miembro
+  if ([4, 7, 9].includes(type)) return null;
+  // Se puede dejar comentado para debug
 
   return {
     from: getManagerNameById(managersCache, item.user1Id),
@@ -38,7 +42,7 @@ export const summarizeActivity = (item, { managersCache, playersCache } = {}) =>
     date: pick(item, DATE_KEYS),
     
     // TO-DO: Implementar playerValueAtTime para calcular el valor del jugador en la fecha de la actividad
-    investedOnClause: (amount - playerValueAtTime(playerName, date)) ?? null, 
+    // investedOnClause: (amount - playerValueAtTime(playerName, date)) ?? null, 
     
     activityId: item.id ?? null,
     activityTypeId: type ?? null,
