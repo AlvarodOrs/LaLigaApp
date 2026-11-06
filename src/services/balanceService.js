@@ -11,12 +11,12 @@ const BONUS_INCLUDES_FIRST_DAY = false;
 // false -> user1 es el vendedor y user2 el comprador
 const TYPE1_USER1_IS_BUYER = true;
 
-const ACTIVITY_TYPES = {
+export const ACTIVITY_TYPES = {
   1: 'Compra entre mánagers',
-  4: 'Actividad tipo 4',
+  4: 'Blindaje de jugador',
   6: 'Recompensa de jornada',
-  7: 'Actividad tipo 7',
-  9: 'Actividad tipo 9',
+  7: 'Alineación incorrecta',
+  9: 'Nuevo miembro de la liga',
   31: 'Compra al mercado',
   33: 'Venta al mercado'
 };
@@ -80,7 +80,7 @@ const getFirstActivityDate = (activities) => {
  * Fórmula               =  100M + 100.000 × días - compras + ventas + recompensas
  * Fórmula en un futuro  =  100M + 100.000 × días - compras + ventas a LaLiga + ventas a managers + recompensas
  * con ventas a managers = (precio venta - precio mercado en esa fecha) / 2, debido al coste de subida de cláusula.
- *  
+ *
  * @param leagueStartDate Fecha real de creación de la liga (recomendado).
  *   Si no se pasa, se usa la actividad más antigua descargada.
  */
@@ -303,3 +303,6 @@ export const calculateManagerBalances = ({
     balances
   };
 };
+
+// TO-DO
+// Add Invested on Clause -> when activityType === 1, (sold price - market price)/2

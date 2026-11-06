@@ -1,0 +1,76 @@
+import { extractArray } from '../utils/helpers';
+import { isExpenseActivity, resolveActivityPlayer } from '../components/Activity/activityUtils';
+import { ACTIVITY_TYPES } from './balanceService';
+
+const debuggedActivityIds = new Set();
+
+// Primer valor definido de una lista de campos candidatos.
+const pick = (item, keys) => {
+  for (const key of keys) {
+    const value = item?.[key];
+    if (value !== undefined && value !== null) return value;
+  }
+  return null;
+};
+
+// Ajusta estas listas a los campos reales de tu API.
+const AMOUNT_KEYS = ['amount', 'price', 'money', 'value', 'cash'];
+const DATE_KEYS = ['date', 'createdAt', 'timestamp', 'activityDate'];
+
+// Nombre de un manager a partir de su id (managersCache: managerId -> manager).
+const getManagerNameById = (managersCache, id) =>
+  id != null ? managersCache?.get(String(id))?.managerName ?? null : null;
+
+// Convierte un item de la API en una fila plana para diagnóstico.
+export const summarizeActivity = (item, { managersCache, playersCache } = {}) => {
+  const type = item.activityTypeId;
+  const amount = Number(pick(item, AMOUNT_KEYS)) || 0;
+  const resolvedPlayer = resolveActivityPlayer(item, playersCache);
+  const playerName =
+    resolvedPlayer?.name ??
+    resolvedPlayer?.player?.nickname ??
+    resolvedPlayer?.player?.name ??
+    null;
+  const playerId = parseInt(resolvedPlayer?.player?.id) || null;
+  
+  // Ignorar actividades de blindaje, alineación incorrecta y nuevo miembro
+  if ([4, 7, 9].includes(type)) return null;
+  // Se puede dejar comentado para debug
+
+  return {
+    from: getManagerNameById(managersCache, item.user1Id),
+    description: ACTIVITY_TYPES[type] ?? `Actividad tipo ${type}`,
+    to: getManagerNameById(managersCache, item.user2Id) ?? 'market',
+    playerName,
+    amount: isExpenseActivity(type) ? -amount : amount, // negativo = gasto
+    date: pick(item, DATE_KEYS),
+    
+    // TO-DO: Implementar playerValueAtTime para calcular el valor del jugador en la fecha de la actividad
+    // investedOnClause: (amount - playerValueAtTime(playerName, date)) ?? null, 
+    
+    activityId: item.id ?? null,
+    activityTypeId: type ?? null,
+    playerId,
+  };
+};
+
+export const debugAllActivity = (activityData, options = {}) => {
+  const rows = [];
+
+  extractArray(activityData).forEach((item) => {
+    if (debuggedActivityIds.has(item.id)) return;
+    debuggedActivityIds.add(item.id);
+
+    rows.push(summarizeActivity(item, options));
+  });
+
+  if (rows.length > 0) {
+    // eslint-disable-next-line no-console
+    console.log('ACTIVITY DEBUG\n');
+    console.log(JSON.stringify(rows, null, 2));
+  }
+  // eslint-disable-next-line no-console
+  console.log('TOTAL UNIQUE DEBUGGED ACTIVITIES:', debuggedActivityIds.size);
+};
+
+export const resetActivityDebug = () => debuggedActivityIds.clear();

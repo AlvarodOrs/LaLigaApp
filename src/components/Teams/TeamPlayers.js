@@ -21,6 +21,7 @@ import BuyoutFlow from './TeamPlayers/BuyoutFlow';
 import MarketListFlow from './TeamPlayers/MarketListFlow';
 import BidFlow from './TeamPlayers/BidFlow';
 import ShieldFlow from './TeamPlayers/ShieldFlow';
+import TeamTopScorers from './TeamPlayers/TeamTopScorers';
 
 const TeamPlayers = () => {
     const { teamId } = useParams();
@@ -354,6 +355,13 @@ const TeamPlayers = () => {
                     Actualizar
                 </button>
             </div>
+
+            {/* Top scorers (season points) */}
+            <TeamTopScorers
+                teamId={teamId}
+                playersData={playersData}
+                onPlayerClick={handlePlayerClick}
+            />
 
             {/* Players by Position */}
             <div className="space-y-8">
