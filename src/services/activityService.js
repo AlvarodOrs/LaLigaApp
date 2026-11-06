@@ -25,7 +25,13 @@ const getManagerNameById = (managersCache, id) =>
 export const summarizeActivity = (item, { managersCache, playersCache } = {}) => {
   const type = item.activityTypeId;
   const amount = Number(pick(item, AMOUNT_KEYS)) || 0;
-  const { name: playerName } = resolveActivityPlayer(item, playersCache);
+  const resolvedPlayer = resolveActivityPlayer(item, playersCache);
+  const playerName =
+    resolvedPlayer?.name ??
+    resolvedPlayer?.player?.nickname ??
+    resolvedPlayer?.player?.name ??
+    null;
+  const playerId = parseInt(resolvedPlayer?.player?.id) || null;
   
   // Ignorar actividades de blindaje, alineación incorrecta y nuevo miembro
   if ([4, 7, 9].includes(type)) return null;
@@ -34,9 +40,7 @@ export const summarizeActivity = (item, { managersCache, playersCache } = {}) =>
   return {
     from: getManagerNameById(managersCache, item.user1Id),
     description: ACTIVITY_TYPES[type] ?? `Actividad tipo ${type}`,
-    ...( ![4, 7, 9].includes(type) && {
-      to: getManagerNameById(managersCache, item.user2Id) ?? 'market'
-    }),
+    to: getManagerNameById(managersCache, item.user2Id) ?? 'market',
     playerName,
     amount: isExpenseActivity(type) ? -amount : amount, // negativo = gasto
     date: pick(item, DATE_KEYS),
@@ -46,6 +50,7 @@ export const summarizeActivity = (item, { managersCache, playersCache } = {}) =>
     
     activityId: item.id ?? null,
     activityTypeId: type ?? null,
+    playerId,
   };
 };
 
@@ -61,7 +66,8 @@ export const debugAllActivity = (activityData, options = {}) => {
 
   if (rows.length > 0) {
     // eslint-disable-next-line no-console
-    console.log('ACTIVITY DEBUG\n' + JSON.stringify(rows, null, 2));
+    console.log('ACTIVITY DEBUG\n');
+    console.log(JSON.stringify(rows, null, 2));
   }
   // eslint-disable-next-line no-console
   console.log('TOTAL UNIQUE DEBUGGED ACTIVITIES:', debuggedActivityIds.size);
