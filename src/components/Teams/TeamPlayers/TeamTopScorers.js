@@ -7,7 +7,38 @@ import { flattenPositionKeyedPlayers } from '../../../utils/formationUtils';
 import { formatNumber, getPositionName, getPositionColor } from '../../../utils/helpers';
 
 const CHUNK = 5; // simultaneous requests when loading past jornadas
-const MEDAL_COLORS = ['text-yellow-500', 'text-gray-400', 'text-orange-500'];
+
+// Podium styling, indexed by rank (0 = 1st, 1 = 2nd, 2 = 3rd).
+// Full class strings so Tailwind can detect them.
+const PODIUM = [
+    {
+        height: 'h-48 sm:h-56',
+        accent: 'border-t-yellow-400',
+        medal: 'bg-yellow-500',
+        ring: 'ring-yellow-400',
+        glow: 'from-yellow-400/20',
+        avatar: 'w-16 h-16 sm:w-24 sm:h-24',
+    },
+    {
+        height: 'h-40 sm:h-44',
+        accent: 'border-t-gray-400',
+        medal: 'bg-gray-400',
+        ring: 'ring-gray-300 dark:ring-gray-500',
+        glow: 'from-gray-400/20',
+        avatar: 'w-14 h-14 sm:w-20 sm:h-20',
+    },
+    {
+        height: 'h-32 sm:h-36',
+        accent: 'border-t-orange-500',
+        medal: 'bg-orange-500',
+        ring: 'ring-orange-400',
+        glow: 'from-orange-500/20',
+        avatar: 'w-12 h-12 sm:w-16 sm:h-16',
+    },
+];
+
+// Visual order left → right: 2nd, 1st, 3rd
+const PODIUM_ORDER = [1, 0, 2];
 
 /**
  * Points each player made FOR this manager: sum, over every jornada played,
@@ -75,17 +106,21 @@ const TeamTopScorers = ({ teamId, playersData, onPlayerClick, limit = 3 }) => {
         );
     }
 
-    const top = (data || [])
+    // Podium holds at most 3 places
+    const top = [...(data || [])]
         .sort((a, b) =>
             (b.points - a.points) ||
             ((b.player.marketValue || 0) - (a.player.marketValue || 0)))
-        .slice(0, limit);
+        .slice(0, Math.min(limit, 3));
 
     if (top.length === 0 || top[0].points <= 0) return null;
 
     const currentSquad = new Map(
         (playersData || []).map((pt) => [String(pt.playerMaster?.id), pt])
     );
+
+    // Re-arrange as 2nd, 1st, 3rd (skipping places that don't exist)
+    const podiumSlots = PODIUM_ORDER.filter((rank) => top[rank]);
 
     return (
         <section aria-labelledby="top-scorers-title" className="card p-4 sm:p-6">
@@ -94,62 +129,77 @@ const TeamTopScorers = ({ teamId, playersData, onPlayerClick, limit = 3 }) => {
                 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white mb-1"
             >
                 <Trophy className="w-5 h-5 text-yellow-500" aria-hidden="true" />
-                Top {top.length} jugadores que más puntos le han dado
+                Los que más puntos le han dado
             </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                Solo cuentan los puntos de las jornadas en que el jugador estuvo en su alineación.
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">
+                Contando solo las jornadas en las que estuvieron en su alineación.
             </p>
 
-            <ol className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {top.map(({ player, points, weeks }, index) => {
+            <ol className="grid grid-cols-3 gap-2 sm:gap-4 items-end max-w-2xl mx-auto">
+                {podiumSlots.map((rank) => {
+                    const { player, points, weeks } = top[rank];
+                    const style = PODIUM[rank];
                     const playerTeam = currentSquad.get(String(player.id));
                     const image = player.images?.transparent?.['256x256'];
                     const name = player.nickname || player.name;
+                    const positionName = ((p) => p === 'Centrocampista' ? 'Medio' : p)(getPositionName(player.positionId));
+
                     return (
-                        <li key={player.id}>
+                        <li key={player.id} className="min-w-0">
                             <button
                                 type="button"
                                 onClick={() => onPlayerClick(player, playerTeam || {})}
-                                className="w-full flex items-center gap-4 p-3 rounded-xl text-left bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                aria-label={`Puesto ${index + 1}: ${name}, ${points} puntos en ${weeks} jornadas`}
+                                className="group w-full flex flex-col items-center rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                aria-label={`Puesto ${rank + 1}: ${name}, ${points} puntos en ${weeks} jornadas`}
                             >
-                                <span className={`text-2xl font-black w-7 text-center flex-shrink-0 ${MEDAL_COLORS[index] || 'text-gray-500'}`}>
-                                    {index + 1}
+                                {/* Player picture on top, with a little medal */}
+                                <div className="relative mb-3 transition-transform duration-200 group-hover:-translate-y-1">
+                                    <div
+                                        className={`${style.avatar} rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden flex items-center justify-center ring-2 ${style.ring} ring-offset-2 ring-offset-white dark:ring-offset-gray-900 shadow-md`}
+                                    >
+                                        {image ? (
+                                            <img
+                                                src={image}
+                                                alt={name}
+                                                className="w-full h-full object-contain"
+                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                            />
+                                        ) : (
+                                            <span className="text-lg font-bold text-gray-500 dark:text-gray-400">
+                                                {(name || '?').charAt(0).toUpperCase()}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <span
+                                        className={`absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 rounded-full ${style.medal} text-white text-xs sm:text-sm font-black flex items-center justify-center border-2 border-white dark:border-gray-900 shadow`}
+                                        aria-hidden="true"
+                                    >
+                                        {rank + 1}
+                                    </span>
+                                </div>
+
+                                {/* Name + position */}
+                                <p className="w-full text-center text-xs sm:text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                    {name}
+                                </p>
+                                <span className={`mt-1 mb-3 px-2 py-0.5 rounded-full text-[10px] font-bold ${getPositionColor(player.positionId)}`}>
+                                    {positionName}
                                 </span>
 
-                                <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                    {image ? (
-                                        <img
-                                            src={image}
-                                            alt={name}
-                                            className="w-full h-full object-contain"
-                                            onError={(e) => { e.target.style.display = 'none'; }}
-                                        />
-                                    ) : (
-                                        <span className="text-lg font-bold text-gray-500 dark:text-gray-400">
-                                            {(name || '?').charAt(0).toUpperCase()}
-                                        </span>
-                                    )}
-                                </div>
-
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-semibold text-gray-900 dark:text-white truncate">{name}</p>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${getPositionColor(player.positionId)}`}>
-                                            {((p) => p === 'Centrocampista' ? 'Medio' : p)(getPositionName(player.positionId))}
-                                        </span>
-                                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                            {weeks} {weeks === 1 ? 'jornada' : 'jornadas'}
-                                            {!playerTeam && ' y se fue' || ' y sumando'}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="text-right flex-shrink-0">
-                                    <p className="text-xl font-bold text-primary-600 dark:text-primary-400">
+                                {/* Podium block: same card look as before, with a medal-coloured top edge */}
+                                <div
+                                    className={`${style.height} w-full relative overflow-hidden rounded-t-xl border border-b-0 border-t-4 ${style.accent} border-x-gray-200 dark:border-x-gray-700 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 group-hover:shadow-lg transition-shadow duration-200 flex flex-col items-center justify-start pt-3 px-1`}
+                                >
+                                    <div className={`absolute inset-x-0 top-0 h-16 bg-gradient-to-b ${style.glow} to-transparent pointer-events-none`} aria-hidden="true" />
+                                    <p className="relative text-xl sm:text-2xl font-bold text-primary-600 dark:text-primary-400 leading-none">
                                         {formatNumber(points)}
                                     </p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">pts</p>
+                                    <p className="relative text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">pts</p>
+                                    <p className="relative mt-2 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 text-center leading-tight">
+                                        {weeks} {weeks === 1 ? 'jornada' : 'jornadas'}
+                                        <br />
+                                        {!playerTeam ? 'ya se fue' : 'y sigue'}
+                                    </p>
                                 </div>
                             </button>
                         </li>
