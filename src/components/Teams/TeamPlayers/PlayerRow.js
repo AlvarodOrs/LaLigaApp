@@ -25,6 +25,21 @@ const PlayerRow = ({
     if (!player) return null;
 
     const trendData = getPlayerTrendData(player);
+
+    const projectedValue = trendData?.valor
+        ? trendData.valor * (1 + trendData.porcentaje * 14 / 100)
+        : player.marketValue;
+
+    const projectedPointsBonus = 100_000 * 3 * (player.averagePoints || 0);
+
+    const maxRecommendedBid = trendData
+        ? Math.ceil(projectedValue + projectedPointsBonus)
+        : null;
+
+    const maxRecommendedBidDeviation = maxRecommendedBid
+        ? Math.ceil(maxRecommendedBid * 0.1)
+        : null;
+
     const expirationInfo = isPlayerInMarket(player.id) ? getMarketExpirationInfo(player.id) : null;
     const clauseState = getClauseLockState(playerTeam.buyoutClauseLockedEndTime);
     const clauseOpen = clauseState.isOpen;
@@ -99,12 +114,13 @@ const PlayerRow = ({
 
                 {/* Market Trend Info */}
                 {trendData && (
-                    <div className="pt-3 border-t border-gray-200 dark:border-dark-border">
+                    <div className="pt-3 border-t border-gray-200 dark:border-dark-border space-y-2">
                         <div className="flex items-center justify-between">
                             <span className="text-xs text-gray-400 flex items-center gap-1">
                                 <TrendingUp className="w-3 h-3" />
                                 Tendencia 24h:
                             </span>
+
                             <div className={`flex items-center gap-1 text-sm font-medium ${
                                 trendData.isPositive ? 'text-green-600 dark:text-green-400' :
                                     trendData.isNegative ? 'text-red-600 dark:text-red-400' :
@@ -117,9 +133,23 @@ const PlayerRow = ({
                                 </span>
                             </div>
                         </div>
+
+                        {maxRecommendedBid && (
+                            <div className="flex justify-between items-center pt-2 border-t border-gray-100 dark:border-gray-700">
+                                <span className="text-xs text-gray-400">
+                                    Puja máxima recomendada:
+                                </span>
+
+                                <span className="text-sm font-bold text-green-600 text-right flex flex-col items-end">
+                                    {formatNumberWithDots(maxRecommendedBid)}€
+                                    <span className="text-xs font-normal text-gray-400 dark:text-gray-500">
+                                        ±{formatNumberWithDots(maxRecommendedBidDeviation)}€
+                                    </span>
+                                </span>
+                            </div>
+                        )}
                     </div>
                 )}
-
                 {/* Purchase Info */}
                 {playerTeam.purchasePrice && (
                     <div className="pt-3 border-t border-gray-200 dark:border-dark-border">
