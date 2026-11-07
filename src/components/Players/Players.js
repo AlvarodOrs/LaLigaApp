@@ -117,32 +117,68 @@ const PlayerGridCard = React.memo(function PlayerGridCard({ player }) {
         {/* Market Trend */}
         <div className="pt-3 border-t border-gray-200 dark:border-dark-border">
           {player.trendData ? (
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-400 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" />
-                Tendencia 24h:
-              </span>
-              <div className={`flex items-center gap-1 text-sm font-medium ${
-                player.trendData.isPositive ? 'text-green-600 dark:text-green-400' :
-                player.trendData.isNegative ? 'text-red-600 dark:text-red-400' :
-                'text-gray-500 dark:text-gray-400'
-              }`}>
-                <span>{player.trendData.tendencia}</span>
-                <span>{player.trendData.cambioTexto}</span>
-                {player.trendData.porcentaje !== undefined && Math.abs(player.trendData.porcentaje) > 0 && (
-                  <span className="text-xs">
-                    ({Math.abs(player.trendData.porcentaje).toFixed(1)}%)
-                  </span>
-                )}
+            <>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-400 flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  Tendencia 24h:
+                </span>
+
+                <div className={`flex items-center gap-1 text-sm font-medium ${
+                  player.trendData.isPositive ? 'text-green-600 dark:text-green-400' :
+                  player.trendData.isNegative ? 'text-red-600 dark:text-red-400' :
+                  'text-gray-500 dark:text-gray-400'
+                }`}>
+                  <span>{player.trendData.tendencia}</span>
+                  <span>{player.trendData.cambioTexto}</span>
+                  {player.trendData.porcentaje !== undefined && Math.abs(player.trendData.porcentaje) > 0 && (
+                    <span className="text-xs">
+                      ({Math.abs(player.trendData.porcentaje).toFixed(1)}%)
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
+
+              {/* Recommended bid */}
+              {player.trendData.valor && player.averagePoints !== undefined && (
+                <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    Puja recomendada:
+                  </span>
+
+                  <span className="text-sm font-bold text-green-600 text-right flex flex-col items-end">
+                    {formatNumberWithDots(
+                      Math.ceil(
+                        player.trendData.valor *
+                        (1 + player.trendData.porcentaje * 14 / 100) +
+                        100_000 * 3 * player.averagePoints
+                      )
+                    )}€
+
+                    <span className="text-xs font-normal text-gray-400 dark:text-gray-500">
+                      ±{formatNumberWithDots(
+                        Math.ceil(
+                          (
+                            player.trendData.valor *
+                            (1 + player.trendData.porcentaje * 14 / 100) +
+                            100_000 * 3 * player.averagePoints
+                          ) * 0.1
+                        )
+                      )}€
+                    </span>
+                  </span>
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400 flex items-center gap-1">
                 <TrendingUp className="w-3 h-3" />
                 Tendencia 24h:
               </span>
-              <span className="text-xs text-gray-500">Sin datos de tendencia</span>
+              <span className="text-xs text-gray-500">
+                Sin datos de tendencia
+              </span>
             </div>
           )}
         </div>
