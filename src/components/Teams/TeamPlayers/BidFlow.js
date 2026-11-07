@@ -7,6 +7,7 @@ import { fantasyAPI } from '../../../services/api';
 import teamService from '../../../services/teamService';
 import { invalidateMarketData } from '../../../utils/cacheInvalidation';
 import { createMoneyInputHandler } from '../../../utils/moneyInput';
+import marketTrendsService from '../../../services/marketTrendsService';
 
 /**
  * BidFlow — bid input + confirm + cancel-bid confirm.
@@ -225,6 +226,26 @@ const BidFlow = ({
     const confirmOpen = bidFlow.isConfirming && selectedPlayer;
     const cancelOpen = cancelBidFlow.isConfirming && selectedPlayer;
 
+    const playerData = selectedPlayer?.player;
+
+    const trendData = playerData
+        ? marketTrendsService.resolveTrendForPlayer(playerData)
+        : null;
+
+    const proyectedValue = trendData
+        ? playerData.marketValue * (1 + trendData.porcentaje * 14 / 100)
+        : playerData?.marketValue || 0;
+
+    const proyectedPointsBonus = 100_000 * 3 * (playerData?.averagePoints || 0);
+
+    const maxRecommendedBid = Math.ceil(
+        proyectedValue + proyectedPointsBonus
+    );
+
+    const maxRecommendedBidDeviation = Math.ceil(
+        maxRecommendedBid * 0.1
+    );
+
     return (
         <>
             {inputOpen && (
@@ -274,19 +295,28 @@ const BidFlow = ({
                         {typeof teamMoney === 'number' && (
                             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        Dinero actual:
-                                    </span>
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Dinero actual:</span>
                                     <span className="font-bold text-blue-600">
-                                        {formatNumberWithDots(teamService.getAvailableMoney ? teamService.getAvailableMoney() : teamMoney)}€
+                                        {formatNumberWithDots(teamMoney || 0)}€
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        Puja Máxima Actual:
-                                    </span>
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Puja Máxima Actual Posible:</span>
                                     <span className="font-bold text-green-600">
-                                        {formatNumberWithDots(teamService.getAvailableMoneyForBids ? teamService.getAvailableMoneyForBids() : teamMoney)}€
+                                        {formatNumberWithDots(
+                                            teamService.getAvailableMoneyForBids
+                                                ? teamService.getAvailableMoneyForBids()
+                                                : teamMoney
+                                        )}€
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Puja Máxima Recomendada:</span>
+                                    <span className="font-bold text-green-600 text-right flex flex-col items-end">
+                                        {formatNumberWithDots(maxRecommendedBid)}€
+                                        <span className="text-xs font-normal text-gray-400 dark:text-gray-500">
+                                            ±{formatNumberWithDots(maxRecommendedBidDeviation)}€
+                                        </span>
                                     </span>
                                 </div>
                             </div>
