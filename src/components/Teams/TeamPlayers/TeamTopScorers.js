@@ -198,7 +198,7 @@ const TeamTopScorers = ({ teamId, playersData, onPlayerClick, limit = 3 }) => {
                                     <p className="relative mt-2 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 text-center leading-tight">
                                         {weeks} {weeks === 1 ? 'jornada' : 'jornadas'}
                                         <br />
-                                        {!playerTeam ? 'ya se fue' : 'y sigue'}
+                                        {!playerTeam ? 'y se fue' : 'y sigue'}
                                     </p>
                                 </div>
                             </button>
