@@ -8,6 +8,7 @@ import { invalidateAfterBid } from '../../utils/cacheInvalidation';
 import useModalFlow from '../../hooks/useModalFlow';
 import { createMoneyInputHandler } from '../../utils/moneyInput';
 import { getMinimumBid } from '../../utils/bidHelpers';
+import marketTrendsService from '../../services/marketTrendsService';
 
 /**
  * useBidFlow — encapsulates bid modal state + submission for the Market.
@@ -147,6 +148,13 @@ export const BidModal = ({
 
   const minimumBid = getMinimumBid(player);
 
+  const trendData = marketTrendsService.resolveTrendForPlayer(playerData);
+  
+  const proyectedValue = playerData.marketValue * (1 + trendData.porcentaje * 14 / 100);
+  const proyectedPointsBonus = 100_000 * 3 * playerData.averagePoints;
+  const maxRecommendedBid = Math.ceil(proyectedValue + proyectedPointsBonus);
+  const maxRecommendedBidDeviation = Math.ceil(maxRecommendedBid * 0.1);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="p-6 mx-4">
       <div className="flex justify-between items-center mb-6">
@@ -216,9 +224,18 @@ export const BidModal = ({
           </span>
         </div>
         <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Puja Máxima Actual:</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Puja Máxima Actual Posible:</span>
           <span className="font-bold text-green-600">
             {formatNumberWithDots(availableMoney)}€
+          </span>
+        </div>
+        <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Puja Máxima Recomendada:</span>
+          <span className="font-bold text-green-600 text-right flex flex-col items-end">
+            {formatNumberWithDots(maxRecommendedBid)}€
+              <span className="text-xs font-normal text-gray-400 dark:text-gray-500">
+                ±{formatNumberWithDots(maxRecommendedBidDeviation)}€
+              </span>
           </span>
         </div>
         {isModifying && (
